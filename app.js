@@ -3,13 +3,8 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose')
 const {mongoURI} = require('./config/keys')
 var session = require('express-session')
+const MongoStore = require('connect-mongo')(session)
 var app = express();
-
-app.use(session({
-  secret: 'himanshu is awesome',
-  resave: true,
-  saveUninitialized: false
-}))
 
 // mongodb connection
 mongoose.connect(mongoURI, { useNewUrlParser: true })
@@ -17,6 +12,20 @@ var db = mongoose.connection
 // mongo error
 db.on('error', (errMsg) => {
   console.log(errMsg)
+})
+
+app.use(session({
+  secret: 'himanshu is awesome',
+  resave: true,
+  saveUninitialized: false,
+  store: new MongoStore({
+    mongooseConnection: db
+  })
+}))
+
+app.use( (req, res, next) => {
+  res.locals.currentUser = req.session.userId
+  next()
 })
 
 // parse incoming requests

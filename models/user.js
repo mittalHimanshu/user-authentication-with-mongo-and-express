@@ -1,5 +1,5 @@
 var mongoose = require('mongoose')
-var bcrypt = require('bcrypt')
+var bcrypt = require('bcryptjs')
 
 var UserSchema = new mongoose.Schema({
     email: {
@@ -25,7 +25,7 @@ var UserSchema = new mongoose.Schema({
 })
 
 UserSchema.statics.authenticate = (email, password, callback) => {
-    UserSchema.findOne({email})
+    User.findOne({email})
         .exec((err, user) => {
             if(err) return callback(err)
             else if (!user){
@@ -34,13 +34,14 @@ UserSchema.statics.authenticate = (email, password, callback) => {
                 return callback(err)
             }
             bcrypt.compare(password, user.password, (err, result) => {
+                console.log(password, user.password)
                 if(result === true) return callback(null, user)
                 return callback()
             })
         })
 }
 
-UserSchema.pre('save', next => {
+UserSchema.pre('save', function(next) {
     var user = this
     bcrypt.hash(user.password, 10, (err, hash) => {
         if(err) return next(err)
@@ -49,4 +50,4 @@ UserSchema.pre('save', next => {
     })
 })
 
-module.exports = mongoose.model('User', UserSchema)
+module.exports = User = mongoose.model('User', UserSchema)
